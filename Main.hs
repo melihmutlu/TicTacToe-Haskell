@@ -133,3 +133,16 @@ hasWinner board = let allRows = convertToList board ++ convertToList (verticals 
     where 
         convertToList (r1,r2,r3) = [r1,r2,r3]
         diagonalsToList (r1,r2) = [r1,r2]
+
+-- Returns the game tree 
+gameTree :: Player -> Board -> Rose Board
+gameTree player board
+    | isJust (hasWinner board) = board :> []
+    | null (moves player board) = board :> []
+    | tail (moves player board) /= [] = board :> generateTree (nextPlayer player) (moves player board)
+    | otherwise = board :> [head (moves player board) :> []]
+
+-- Creates a tree list recursively. It is used for the children list of a node
+generateTree :: Player -> [Board] -> [Rose Board]
+generateTree _ [] = []
+generateTree player (board:rs) = root (gameTree player board) :> children (gameTree player board) : generateTree player rs
