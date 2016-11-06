@@ -146,3 +146,67 @@ gameTree player board
 generateTree :: Player -> [Board] -> [Rose Board]
 generateTree _ [] = []
 generateTree player (board:rs) = root (gameTree player board) :> children (gameTree player board) : generateTree player rs
+
+-- Returns the number of leaves in a game tree
+gameTreeComplexity :: Int
+gameTreeComplexity = leaves (gameTree P1 emptyBoard)
+
+-- | Minimax
+
+-- Minimax method to minimize the score of the player that we don't want to lose. It plays like opponent player 
+minimax' :: Player -> Rose Board -> Rose Int
+-- If the argument is a leaf, returns the score
+minimax' player (b :> []) 
+    | hasWinner b == Just player = (-1):>[]     
+    | hasWinner b == Nothing = 0:>[]
+    | otherwise = 1:>[]
+minimax' player board@(b:>bs) = (minimum'  (map root _minimax ) :> minimaxChildren bs )
+    where
+        next = nextPlayer player
+        -- Applies the moves of next player on children nodes
+        _minimax = map (minimax next) bs 
+        -- Returns a list of children after a move
+        minimaxChildren [] = []
+        minimaxChildren boardList =  map makeRose boardList
+        -- All boards in the list converted to a tree
+        makeRose board = root (minimax next board) :> children (minimax next board)
+ 
+-- Minimax method to maximize the score of a given player        
+minimax :: Player -> Rose Board -> Rose Int
+-- If the argument is a leaf, returns the score
+minimax player (b:>[]) 
+    | hasWinner b == Just player = 1:>[]
+    | isNothing (hasWinner b) = 0:>[]
+    | otherwise = (-1):>[]
+minimax player board@(b:>bs) = (maximum'  (map root _minimax) :> minimaxChildren bs )
+    where 
+        next = nextPlayer player
+        -- Applies the moves of next player on children nodes
+        _minimax = map (minimax' next) bs
+        -- Returns a list of children after a move
+        minimaxChildren [] = []
+        minimaxChildren boardList = map  makeRose boardList
+        -- All boards in the list converted to a tree
+        makeRose board = root (minimax' next board) :> children (minimax' next board)
+
+-- * Lazier minimum and maximums
+
+-- Lazy minimum method which stops searchin when hits -1
+minimum' :: [Int] -> Int
+minimum' [x] = x 
+minimum' (x:xs) 
+    | x == (-1) = (-1)
+    | x < minValue = x
+    | otherwise = minValue
+    where 
+        minValue = minimum' xs
+
+-- Lazy maximum method which stops searchin when hits 1
+maximum' :: [Int] -> Int
+maximum' [x] = x 
+maximum' (x:xs) 
+    | x == 1 = 1
+    | x > maxValue = x
+    | otherwise = maxValue
+    where
+        maxValue = maximum' xs
