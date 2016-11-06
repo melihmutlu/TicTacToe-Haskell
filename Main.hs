@@ -1,5 +1,5 @@
 module Main where 
-                         
+                        
 
 import Control.Monad
 
@@ -13,6 +13,7 @@ import System.IO
 
 data Rose a = a :> [Rose a]
     deriving (Eq, Show)
+
 
 -- Returns the root of a given Rose tree
 root :: Rose a -> a
@@ -65,6 +66,9 @@ symbol player = if player == P1
                     then X
                 else O
 
+type Row   = (Field, Field, Field)
+type Board = (Row, Row, Row)
+
 -- Returns columns of a given board
 verticals :: Board -> (Row, Row, Row)
 verticals ((x1,x2,x3),(y1,y2,y3),(z1,z2,z3)) = ((x1,y1,z1),(x2,y2,z2),(x3,y3,z3)) 
@@ -84,7 +88,7 @@ printBoard (r1,r2,r3)= printRow r1 ++ "\n-+-+-\n" ++ printRow r2 ++ "\n-+-+-\n" 
         printRow (x,y,z) = show x ++ "|" ++ show y ++ "|" ++ show z 
 
 -- | Move generation
-
+             
 -- Returns a list of rows that occur after a move in that row
 moveInRow :: Row -> Field -> [Row]
 moveInRow (x,y,z) symbol 
@@ -147,6 +151,8 @@ generateTree :: Player -> [Board] -> [Rose Board]
 generateTree _ [] = []
 generateTree player (board:rs) = root (gameTree player board) :> children (gameTree player board) : generateTree player rs
 
+-- | Game complexity
+
 -- Returns the number of leaves in a game tree
 gameTreeComplexity :: Int
 gameTreeComplexity = leaves (gameTree P1 emptyBoard)
@@ -189,6 +195,8 @@ minimax player board@(b:>bs) = (maximum'  (map root _minimax) :> minimaxChildren
         -- All boards in the list converted to a tree
         makeRose board = root (minimax' next board) :> children (minimax' next board)
 
+
+
 -- * Lazier minimum and maximums
 
 -- Lazy minimum method which stops searchin when hits -1
@@ -211,7 +219,7 @@ maximum' (x:xs)
     where
         maxValue = maximum' xs
 
--- | Game Play
+-- | Gameplay
 
 -- Makes the optimal move
 makeMove :: Player -> Board -> Maybe Board
@@ -229,7 +237,6 @@ makeMove player board =
         isOptimal (b:bs)
             | root (minimax' (nextPlayer player) b) == score = Just (root b) 
             | otherwise = isOptimal bs     
-
 
 -- | Main
 
@@ -256,13 +263,13 @@ main = do
             case hasWinner b of
                 Just p  -> putStrLn (show p ++ " has won!")
                 Nothing -> do
-                    putStr   ("It's " ++ show p ++ "'s turn. ")
+                    putStr   ( show p ++ "'s turn. ")
                     mb' <- case playerType p of
                         Human    -> humanMove    p b
                         Computer -> computerMove p b
                     case mb' of
                         Nothing -> do putStr   "No more moves are possible. "
-                                      putStrLn "Draw."
+                                      putStrLn "draw."
                         Just b' -> gameLoop (nextPlayer p) b'
 
         humanMove :: Player -> Board -> IO (Maybe Board)
