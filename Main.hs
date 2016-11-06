@@ -33,3 +33,40 @@ size (a :> rs)= 1 +  sum (map size rs)
 leaves :: Rose a -> Int
 leaves (a :> [])= 1 
 leaves (a :> rs)= sum (map leaves rs) 
+
+-- | State representation
+
+-- * Players
+
+data Player = P1 | P2
+    deriving (Eq, Ord)
+
+instance Show Player where
+    show P1 = "Player 1"
+    show P2 = "Player 2"
+    
+-- Exercise 3
+
+-- Return the next player
+nextPlayer :: Player -> Player
+nextPlayer currentPlayer  = if currentPlayer == P1 
+                                then P2
+                            else P1
+
+-- * Board
+
+data Field = X | O | B
+    deriving (Eq, Ord)
+
+instance Show Field where
+    show X = "X"
+    show O = "O"
+    show B = " "
+
+-- Exercise 4
+
+-- Returns the symbol of a given player
+symbol :: Player -> Field
+symbol player = if player == P1 
+                    then X
+                else O
