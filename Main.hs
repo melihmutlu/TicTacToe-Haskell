@@ -14,8 +14,6 @@ import System.IO
 data Rose a = a :> [Rose a]
     deriving (Eq, Show)
 
--- Exercise 1
-
 -- Returns the root of a given Rose tree
 root :: Rose a -> a
 root (a :> rs)= a 
@@ -45,8 +43,6 @@ instance Show Player where
     show P1 = "Player 1"
     show P2 = "Player 2"
     
--- Exercise 3
-
 -- Return the next player
 nextPlayer :: Player -> Player
 nextPlayer currentPlayer  = if currentPlayer == P1 
@@ -63,10 +59,26 @@ instance Show Field where
     show O = "O"
     show B = " "
 
--- Exercise 4
-
 -- Returns the symbol of a given player
 symbol :: Player -> Field
 symbol player = if player == P1 
                     then X
                 else O
+
+-- Returns columns of a given board
+verticals :: Board -> (Row, Row, Row)
+verticals ((x1,x2,x3),(y1,y2,y3),(z1,z2,z3)) = ((x1,y1,z1),(x2,y2,z2),(x3,y3,z3)) 
+
+-- Return the diagonals of a given board
+diagonals :: Board -> (Row, Row)
+diagonals ((x1,_,x3),(_,y2,_),(z1,_,z3))= ((x1,y2,z3),(x3,y2,z1))
+
+-- Creates an empty board
+emptyBoard :: Board
+emptyBoard = ((B,B,B),(B,B,B),(B,B,B))
+
+-- Pritns the board in a proper way
+printBoard :: Board -> String
+printBoard (r1,r2,r3)= printRow r1 ++ "\n-+-+-\n" ++ printRow r2 ++ "\n-+-+-\n" ++ printRow r3 ++ "\n"
+    where 
+        printRow (x,y,z) = show x ++ "|" ++ show y ++ "|" ++ show z 
