@@ -82,3 +82,54 @@ printBoard :: Board -> String
 printBoard (r1,r2,r3)= printRow r1 ++ "\n-+-+-\n" ++ printRow r2 ++ "\n-+-+-\n" ++ printRow r3 ++ "\n"
     where 
         printRow (x,y,z) = show x ++ "|" ++ show y ++ "|" ++ show z 
+
+-- | Move generation
+
+-- Returns a list of rows that occur after a move in that row
+moveInRow :: Row -> Field -> [Row]
+moveInRow (x,y,z) symbol 
+    | x==B && y==B && z==B = [(symbol,y,z),(x,symbol,z),(x,y,symbol)]
+    | x==B && y==B = [(symbol,y,z),(x,symbol,z)]
+    | x==B && z==B = [(symbol,y,z),(x,y,symbol)]
+    | z==B && y==B = [(x,symbol,z),(x,y,symbol)]
+    | x==B = [(symbol,y,z)]
+    | y==B = [(x,symbol,z)]
+    | z==B = [(x,y,symbol)]
+    | otherwise = []
+
+-- Returns a Board list that includes all possible boards after one move
+createBoards :: Board -> Int -> Field -> [Board]
+createBoards (x,y,z) rowNumber symbol
+    | rowNumber == 1 = makeList (moveInRow x symbol) y z
+    | rowNumber == 2 = makeList (moveInRow y symbol) x z
+    | rowNumber == 3 = makeList (moveInRow z symbol) x y
+    where
+        makeList (row:rs) row1 row2 
+            | rowNumber == 1 = (row,row1,row2) : makeList rs row1 row2
+            | rowNumber == 2 = (row1,row,row2) : makeList rs row1 row2
+            | rowNumber == 3 = (row1,row2,row) : makeList rs row1 row2
+        makeList [] row1 row2 = []
+
+-- Returns list of the boards after a possible move
+moves :: Player -> Board -> [Board]
+moves  player board = let sym = symbol player in
+    createBoards board 1 sym  ++ createBoards board 2 sym ++ createBoards board 3 sym
+    
+
+-- | Gametree generation
+
+-- Checks if the game is done or not. 
+isDone :: [Row] -> Maybe Player
+isDone [] = Nothing
+isDone ((x,y,z):rs) 
+    | x==X && y==X && z==X = Just P1
+    | x==O && y==O && z==O = Just P2
+    | otherwise = isDone rs
+
+-- Checks if the game is over or not. If the is ended, returns the winner.
+hasWinner :: Board -> Maybe Player
+hasWinner board = let allRows = convertToList board ++ convertToList (verticals board) ++ diagonalsToList (diagonals board) in
+    isDone allRows
+    where 
+        convertToList (r1,r2,r3) = [r1,r2,r3]
+        diagonalsToList (r1,r2) = [r1,r2]
