@@ -210,3 +210,20 @@ maximum' (x:xs)
     | otherwise = maxValue
     where
         maxValue = maximum' xs
+
+-- Makes the optimal move
+makeMove :: Player -> Board -> Maybe Board
+makeMove player board =
+        isOptimal (children tree)
+     where  
+        -- Game tree 
+        tree = gameTree player board
+        -- A tree that stores the scores of each node
+        scoreTree = minimax player tree
+        -- Score of the given board. It should be also the score of the next move
+        score = root scoreTree
+        -- Checks if the move is optimal by looking its score
+        isOptimal [] = Nothing
+        isOptimal (b:bs)
+            | root (minimax' (nextPlayer player) b) == score = Just (root b) 
+            | otherwise = isOptimal bs     
