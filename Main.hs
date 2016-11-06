@@ -211,6 +211,8 @@ maximum' (x:xs)
     where
         maxValue = maximum' xs
 
+-- | Game Play
+
 -- Makes the optimal move
 makeMove :: Player -> Board -> Maybe Board
 makeMove player board =
@@ -227,3 +229,75 @@ makeMove player board =
         isOptimal (b:bs)
             | root (minimax' (nextPlayer player) b) == score = Just (root b) 
             | otherwise = isOptimal bs     
+
+
+-- | Main
+
+data PlayerType = Human | Computer
+
+instance Show PlayerType where
+    show Human    = "H"
+    show Computer = "C"
+
+main :: IO ()
+main = do
+    typeOfP1 <- askFor "Will Player 1 be a (H)uman or a (C)omputer player?"
+                       [Human, Computer]
+    typeOfP2 <- askFor "Will Player 2 be a (H)uman or a (C)omputer player?"
+                       [Human, Computer]
+
+    let playerType :: Player -> PlayerType 
+        playerType P1 = typeOfP1
+        playerType P2 = typeOfP2
+
+        gameLoop :: Player -> Board -> IO ()
+        gameLoop p b = do
+            putStrLn ("\n" ++ printBoard b)
+            case hasWinner b of
+                Just p  -> putStrLn (show p ++ " has won!")
+                Nothing -> do
+                    putStr   ("It's " ++ show p ++ "'s turn. ")
+                    mb' <- case playerType p of
+                        Human    -> humanMove    p b
+                        Computer -> computerMove p b
+                    case mb' of
+                        Nothing -> do putStr   "No more moves are possible. "
+                                      putStrLn "Draw."
+                        Just b' -> gameLoop (nextPlayer p) b'
+
+        humanMove :: Player -> Board -> IO (Maybe Board)
+        humanMove p b = do
+            let possibleMoves = moves p b
+            if null possibleMoves then
+                return Nothing
+            else do
+                putStrLn "Possible moves are:"
+                putStrLn (listMoves possibleMoves)
+                i <- askFor "Make your choice:" [1..length possibleMoves]
+                return (Just (possibleMoves !! (i-1)))
+
+        computerMove :: Player -> Board -> IO (Maybe Board)
+        computerMove p b = do
+            putStrLn "Thinking..."
+            return (makeMove p b)
+
+        listMoves :: [Board] -> String
+        listMoves = intercalate "\n"
+                    . map (intercalate "    ")
+                    . transpose
+                    . map lines
+                    . map (\(i,b) -> "(" ++ show i ++ "): \n" ++ printBoard b) 
+                    . zip [1 :: Integer ..]
+
+    gameLoop P1 emptyBoard
+
+askFor :: Show a => String -> [a] -> IO a
+askFor m xs = do
+    putStr (m ++ " ")
+    hFlush stdout
+    i <- getLine
+    case find ((map toLower i ==) . map toLower . show) xs of
+        Nothing -> do putStrLn $ "I didn't understand you. Did you mean one of these : "
+                                 ++ intercalate ", " (map show xs) ++ "."
+                      askFor m xs
+        Just y  -> return y
